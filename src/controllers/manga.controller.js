@@ -338,12 +338,28 @@ exports.createManga = asyncHandler(async (req, res, next) => {
 
   const slug = createSlug(title);
 
-  // Parse arrays if they're strings
-  const authorsArray = typeof authorNames === 'string' ? JSON.parse(authorNames) : authorNames;
-  const genresArray = typeof genreNames === 'string' ? JSON.parse(genreNames) : genreNames;
-  const altTitlesArray = alternativeTitles 
-    ? (typeof alternativeTitles === 'string' ? JSON.parse(alternativeTitles) : alternativeTitles)
-    : [];
+  // Parse arrays if they're strings (support both JSON array and comma-separated)
+  const parseToArray = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      // Try JSON parse first
+      if (value.trim().startsWith('[')) {
+        try {
+          return JSON.parse(value);
+        } catch (e) {
+          return [];
+        }
+      }
+      // Otherwise split by comma
+      return value.split(',').map(v => v.trim()).filter(v => v);
+    }
+    return [];
+  };
+
+  const authorsArray = parseToArray(authorNames);
+  const genresArray = parseToArray(genreNames);
+  const altTitlesArray = parseToArray(alternativeTitles);
 
   // Create or connect authors
   const authorOperations = authorsArray.map(name => ({

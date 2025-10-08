@@ -41,10 +41,14 @@ const uploadImage = async (filePath, folder = 'manga') => {
     const result = await cloudinary.uploader.upload(filePath, {
       folder: folder,
       resource_type: 'image',
+      timeout: 120000, // 2 minutes timeout
+      // Optimize for faster upload
       transformation: [
-        { quality: 'auto' },
+        { width: 2000, height: 2000, crop: 'limit' }, // Limit max dimensions
+        { quality: 'auto:good' }, // Good quality but compressed
         { fetch_format: 'auto' }
-      ]
+      ],
+      eager_async: true, // Process transformations in background
     });
     
     console.log('✅ Upload successful:', result.secure_url);

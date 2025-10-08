@@ -16,10 +16,10 @@ const uploadSingleImage = async (file, folder = 'manga') => {
       throw new AppError('Invalid file type. Only JPEG, PNG, and WebP are allowed', 400);
     }
 
-    // Check file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    // Check file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      throw new AppError('File too large. Maximum size is 5MB', 400);
+      throw new AppError('File too large. Maximum size is 10MB', 400);
     }
 
     // Prepare file for upload (support both disk storage and memory storage)
@@ -61,7 +61,7 @@ const uploadMultiple = async (files, folder = 'manga') => {
 
     // Validate all files
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 10 * 1024 * 1024; // 10MB
 
     for (const file of files) {
       if (!allowedTypes.includes(file.mimetype)) {
