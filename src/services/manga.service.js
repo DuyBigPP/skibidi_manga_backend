@@ -400,11 +400,80 @@ const deleteManga = async (mangaId, userId, userRole) => {
   return true;
 };
 
+/**
+ * Get random manga using Fisher-Yates shuffle algorithm
+ */
+const getRandomManga = async (limit = 1) => {
+  // Get total count first
+  const totalCount = await prisma.manga.count({
+    where: { approvalStatus: 'APPROVED' },
+  });
+
+  if (totalCount === 0) {
+    return [];
+  }
+
+  // Fetch all approved manga IDs
+  const allManga = await prisma.manga.findMany({
+    where: { approvalStatus: 'APPROVED' },
+    select: { id: true },
+  });
+
+  // Shuffle using Fisher-Yates algorithm and take limit
+  const shuffled = [...allManga];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  const selectedIds = shuffled.slice(0, parseInt(limit)).map(m => m.id);
+
+  // Fetch full manga data with relations
+  const manga = await prisma.manga.findMany({
+    where: {
+      id: { in: selectedIds },
+    },
+    include: {
+      authors: {
+        include: {
+          author: {
+            select: { id: true, name: true, slug: true },
+          },
+        },
+      },
+      genres: {
+        include: {
+          genre: {
+            select: { id: true, name: true, slug: true },
+          },
+        },
+      },
+      _count: {
+        select: {
+          chapters: true,
+          bookmarks: true,
+          comments: true,
+        },
+      },
+    },
+  });
+
+  // Format response
+  const formattedManga = manga.map(m => ({
+    ...m,
+    authors: m.authors.map(a => a.author),
+    genres: m.genres.map(g => g.genre),
+  }));
+
+  return formattedManga;
+};
+
 module.exports = {
   getMangaList,
   getMangaBySlug,
   getTrendingManga,
   getRecentManga,
+  getRandomManga,
   createManga,
   updateManga,
   deleteManga,

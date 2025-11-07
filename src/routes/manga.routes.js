@@ -4,6 +4,7 @@ const {
   getMangaBySlug,
   getTrendingManga,
   getRecentManga,
+  getRandomManga,
   createManga,
   updateManga,
   deleteManga,
@@ -152,6 +153,88 @@ router.get('/trending', getTrendingManga);
  *                     type: object
  */
 router.get('/recent', getRecentManga);
+
+/**
+ * @swagger
+ * /api/manga/random:
+ *   get:
+ *     summary: Get truly random manga (using PostgreSQL RANDOM() for no repetition)
+ *     tags: [Manga]
+ *     description: Returns random manga each time with minimal chance of repetition. Uses database-level randomization for true randomness.
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Number of random manga to return (default is 1 for single random manga)
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: List of random manga (truly randomized, minimal repetition)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         example: "cm4jqf1gs0000p8ug1s9qghp6"
+ *                       title:
+ *                         type: string
+ *                         example: "Monster Pet Evolution"
+ *                       slug:
+ *                         type: string
+ *                         example: "monster-pet-evolution-ebb3be"
+ *                       thumbnail:
+ *                         type: string
+ *                         example: "https://example.com/thumbnail.jpg"
+ *                       description:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: [ONGOING, COMPLETED, HIATUS, CANCELLED]
+ *                       authors:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: string
+ *                             name:
+ *                               type: string
+ *                             slug:
+ *                               type: string
+ *                       genres:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: string
+ *                             name:
+ *                               type: string
+ *                             slug:
+ *                               type: string
+ *                       _count:
+ *                         type: object
+ *                         properties:
+ *                           chapters:
+ *                             type: integer
+ *                           bookmarks:
+ *                             type: integer
+ *                           comments:
+ *                             type: integer
+ */
+router.get('/random', getRandomManga);
 
 /**
  * @swagger

@@ -490,3 +490,89 @@ exports.deleteManga = asyncHandler(async (req, res, next) => {
     message: 'Manga deleted successfully',
   });
 });
+
+/**
+ * @desc    Get random manga (truly random using database ORDER BY RANDOM())
+ * @route   GET /api/manga/random
+ * @access  Public
+ */
+exports.getRandomManga = asyncHandler(async (req, res, next) => {
+  const { limit = 1 } = req.query;
+
+  // Get total count first
+  const totalCount = await prisma.manga.count({
+    where: { approvalStatus: 'APPROVED' },
+  });
+
+  if (totalCount === 0) {
+    return res.json({
+      success: true,
+      data: [],
+    });
+  }
+
+  // Fetch all approved manga IDs and randomly select
+  const allManga = await prisma.manga.findMany({
+    where: { approvalStatus: 'APPROVED' },
+    select: { id: true },
+  });
+
+  // Shuffle using Fisher-Yates algorithm and take limit
+  const shuffled = [...allManga];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  const selectedIds = shuffled.slice(0, parseInt(limit)).map(m => m.id);
+
+  // Fetch full manga data with relations
+  const manga = await prisma.manga.findMany({
+    where: {
+      id: { in: selectedIds },
+    },
+    include: {
+      authors: {
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+        },
+      },
+      genres: {
+        include: {
+          genre: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          chapters: true,
+          bookmarks: true,
+          comments: true,
+        },
+      },
+    },
+  });
+
+  // Format response
+  const formattedManga = manga.map(m => ({
+    ...m,
+    authors: m.authors.map(a => a.author),
+    genres: m.genres.map(g => g.genre),
+  }));
+
+  res.json({
+    success: true,
+    data: formattedManga,
+  });
+});

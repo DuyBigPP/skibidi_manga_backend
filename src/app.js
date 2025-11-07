@@ -15,6 +15,7 @@ const mangaRoutes = require('./routes/manga.routes');
 const chapterRoutes = require('./routes/chapter.routes');
 const genreRoutes = require('./routes/genre.routes');
 const authorRoutes = require('./routes/author.routes');
+const bookmarkRoutes = require('./routes/bookmark.routes');
 
 const app = express();
 
@@ -92,6 +93,7 @@ app.use('/api/manga', mangaRoutes);
 app.use('/api/chapters', chapterRoutes);
 app.use('/api/genres', genreRoutes);
 app.use('/api/authors', authorRoutes);
+app.use('/api/bookmarks', bookmarkRoutes);
 
 // Root route
 app.get('/', (req, res) => {
@@ -106,6 +108,7 @@ app.get('/', (req, res) => {
       chapters: '/api/chapters',
       genres: '/api/genres',
       authors: '/api/authors',
+      bookmarks: '/api/bookmarks',
     },
   });
 });
