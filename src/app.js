@@ -16,6 +16,7 @@ const chapterRoutes = require('./routes/chapter.routes');
 const genreRoutes = require('./routes/genre.routes');
 const authorRoutes = require('./routes/author.routes');
 const bookmarkRoutes = require('./routes/bookmark.routes');
+const readingHistoryRoutes = require('./routes/readingHistory.routes');
 
 const app = express();
 
@@ -94,6 +95,7 @@ app.use('/api/chapters', chapterRoutes);
 app.use('/api/genres', genreRoutes);
 app.use('/api/authors', authorRoutes);
 app.use('/api/bookmarks', bookmarkRoutes);
+app.use('/api/reading-history', readingHistoryRoutes);
 
 // Root route
 app.get('/', (req, res) => {
@@ -109,6 +111,7 @@ app.get('/', (req, res) => {
       genres: '/api/genres',
       authors: '/api/authors',
       bookmarks: '/api/bookmarks',
+      readingHistory: '/api/reading-history',
     },
   });
 });
