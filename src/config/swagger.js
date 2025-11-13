@@ -30,7 +30,7 @@ const options = {
         description: 'Development server',
       },
       {
-        url: 'https://api.yourdomain.com',
+        url: 'https://skibidi-manga-backend.onrender.com',
         description: 'Production server',
       },
     ],
