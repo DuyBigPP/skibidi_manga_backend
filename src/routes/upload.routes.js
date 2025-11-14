@@ -4,6 +4,7 @@ const {
   uploadImages,
   uploadMangaCover,
   uploadChapterPages,
+  proxyImage,
 } = require('../controllers/upload.controller');
 const { protect, authorize } = require('../middlewares/auth.middleware');
 const { uploadSingle, uploadMultiple } = require('../middlewares/upload.middleware');
@@ -181,6 +182,67 @@ router.post('/manga-cover', protect, authorize('UPLOADER', 'ADMIN'), uploadSingl
  *         description: Chapter pages uploaded successfully
  */
 router.post('/chapter-pages', protect, authorize('UPLOADER', 'ADMIN'), uploadMultiple, uploadChapterPages);
+
+/**
+ * @swagger
+ * /api/upload/proxy-image:
+ *   get:
+ *     summary: Proxy image from external source (bypass CORS for React Native)
+ *     tags: [Upload]
+ *     parameters:
+ *       - in: query
+ *         name: url
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Image URL to proxy (must be from allowed domains)
+ *         example: https://xfscdn.com/manga/example.jpg
+ *     responses:
+ *       200:
+ *         description: Image proxied successfully
+ *         content:
+ *           image/jpeg:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *           image/png:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *           image/webp:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: URL parameter missing or invalid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: URL parameter is required
+ *       403:
+ *         description: Domain not allowed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Domain not allowed for proxying
+ *       500:
+ *         description: Failed to fetch image
+ */
+router.get('/proxy-image', proxyImage);
 
 module.exports = router;
 
