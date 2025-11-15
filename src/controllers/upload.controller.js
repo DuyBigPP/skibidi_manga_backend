@@ -145,12 +145,16 @@ exports.proxyImage = asyncHandler(async (req, res, next) => {
     // Get content type from response headers
     const contentType = response.headers['content-type'] || 'image/jpeg';
 
-    // Set response headers
+    // Set comprehensive CORS headers to fix NotSameOrigin 403 error
     res.set({
       'Content-Type': contentType,
       'Cache-Control': 'public, max-age=86400', // Cache for 1 day
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': '*',
+      'Access-Control-Expose-Headers': '*',
+      'Cross-Origin-Resource-Policy': 'cross-origin',
+      'Cross-Origin-Embedder-Policy': 'unsafe-none',
       'Content-Length': response.data.length,
     });
 

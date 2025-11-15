@@ -242,6 +242,16 @@ router.post('/chapter-pages', protect, authorize('UPLOADER', 'ADMIN'), uploadMul
  *       500:
  *         description: Failed to fetch image
  */
+// Handle OPTIONS preflight request
+router.options('/proxy-image', (req, res) => {
+  res.set({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': '*',
+  });
+  res.sendStatus(200);
+});
+
 router.get('/proxy-image', proxyImage);
 
 module.exports = router;

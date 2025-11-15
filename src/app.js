@@ -25,8 +25,11 @@ const app = express();
 // MIDDLEWARE
 // ============================================
 
-// Security headers
-app.use(helmet());
+// Security headers - Configure helmet to allow cross-origin resources
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false,
+}));
 
 // CORS - Allow all origins for React Native and web clients
 app.use(cors({
