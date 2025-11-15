@@ -28,14 +28,13 @@ const app = express();
 // Security headers
 app.use(helmet());
 
-// CORS - Flexible configuration
-const corsOptions = {
-  origin: process.env.CORS_ORIGIN === '*' 
-    ? '*' 
-    : process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: process.env.CORS_ORIGIN === '*' ? false : true,
-};
-app.use(cors(corsOptions));
+// CORS - Allow all origins for React Native and web clients
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: false, // IMPORTANT: Must be false when origin is "*"
+}));
 
 // Body parser
 app.use(express.json({ limit: '10mb' }));
