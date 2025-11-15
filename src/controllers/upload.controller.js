@@ -129,56 +129,48 @@ exports.proxyImage = asyncHandler(async (req, res, next) => {
   // }
 
   try {
-    // Build a dynamic Referer based on the target URL's origin
-    // This is more compatible with hosts/CDNs that enforce strict hotlink protection
-    const refererOrigin = `${urlObj.protocol}//${urlObj.hostname}/`;
-
-    // Fetch image with proper headers to bypass restrictions (using axios)
+    // Use a static MangaPark referer (matches your working sample code)
     const response = await axios.get(url, {
-      responseType: 'arraybuffer', // CRITICAL: Get binary data
+      responseType: 'arraybuffer', // get binary data
       headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        Referer: refererOrigin,
-        Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
+        'User-Agent': 'Mozilla/5.0',
+        Referer: 'https://mangapark.org/',
       },
-      timeout: 30000, // 30 second timeout
+      timeout: 30000,
       maxRedirects: 5,
+      validateStatus: () => true, // we will handle non-200 manually
     });
 
-    // Get content type from response headers
+    // If MangaPark/CDN returns non-2xx, propagate that but with JSON so you can see it
+    if (response.status < 200 || response.status >= 300) {
+      console.error(
+        'Proxy image upstream error:',
+        response.status,
+        response.statusText
+      );
+
+      return res.status(502).json({
+        success: false,
+        message: 'Upstream image server returned an error',
+        upstreamStatus: response.status,
+        upstreamStatusText: response.statusText,
+      });
+    }
+
     const contentType = response.headers['content-type'] || 'image/jpeg';
 
-    // Set comprehensive CORS headers to fix NotSameOrigin 403 error
     res.set({
       'Content-Type': contentType,
-      'Cache-Control': 'public, max-age=86400', // Cache for 1 day
+      'Cache-Control': 'public, max-age=86400',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': '*',
-      'Access-Control-Expose-Headers': '*',
-      'Cross-Origin-Resource-Policy': 'cross-origin',
-      'Cross-Origin-Embedder-Policy': 'unsafe-none',
-      'Content-Length': response.data.length,
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
     });
 
-    // Send image buffer
     res.send(response.data);
   } catch (error) {
     console.error('Proxy image error:', error.message);
-    
-    // Handle different error types
-    if (error.response) {
-      // Server responded with error status
-      return next(new AppError(`Failed to fetch image: ${error.response.status} ${error.response.statusText}`, error.response.status));
-    } else if (error.request) {
-      // Request made but no response
-      return next(new AppError('No response from image server', 504));
-    } else {
-      // Other errors
-      return next(new AppError(`Proxy failed: ${error.message}`, 500));
-    }
+    return next(new AppError(`Proxy failed: ${error.message}`, 500));
   }
 });
 
