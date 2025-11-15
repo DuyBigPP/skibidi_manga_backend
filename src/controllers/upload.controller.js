@@ -109,23 +109,23 @@ exports.proxyImage = asyncHandler(async (req, res, next) => {
     return next(new AppError('Invalid URL format', 400));
   }
 
-  // Whitelist allowed domains
-  const allowedDomains = [
-    'mangapark.org',
-    'mangapark.com',
-    'mangapark.net',
-    'mangapark.io',
-    'xfscdn.com',
-    'mpscdn.com',
-  ];
+  // Whitelist allowed domains (commented out to allow all domains)
+  // const allowedDomains = [
+  //   'mangapark.org',
+  //   'mangapark.com',
+  //   'mangapark.net',
+  //   'mangapark.io',
+  //   'xfscdn.com',
+  //   'mpscdn.com',
+  // ];
 
-  const isAllowedDomain = allowedDomains.some(domain => 
-    urlObj.hostname.includes(domain) || urlObj.hostname.endsWith(domain)
-  );
+  // const isAllowedDomain = allowedDomains.some(domain => 
+  //   urlObj.hostname.includes(domain) || urlObj.hostname.endsWith(domain)
+  // );
 
-  if (!isAllowedDomain) {
-    return next(new AppError('Domain not allowed for proxying', 403));
-  }
+  // if (!isAllowedDomain) {
+  //   return next(new AppError('Domain not allowed for proxying', 403));
+  // }
 
   try {
     // Fetch image with proper headers to bypass restrictions
