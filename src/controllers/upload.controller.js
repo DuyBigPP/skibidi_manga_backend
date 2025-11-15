@@ -1,6 +1,7 @@
 const asyncHandler = require('../utils/asyncHandler.util');
 const { AppError } = require('../middlewares/error.middleware');
 const { uploadSingleImage, uploadMultiple } = require('../services/upload.service');
+const axios = require('axios');
 
 /**
  * @desc    Upload single image
@@ -128,41 +129,47 @@ exports.proxyImage = asyncHandler(async (req, res, next) => {
   // }
 
   try {
-    // Fetch image with proper headers to bypass restrictions
-    const response = await fetch(url, {
+    // Fetch image with proper headers to bypass restrictions (using axios)
+    const response = await axios.get(url, {
+      responseType: 'arraybuffer', // CRITICAL: Get binary data
       headers: {
-        'Referer': 'https://mangapark.org/',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://mangapark.org/', // Bypass MangaPark's 403 restriction
         'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
       },
+      timeout: 30000, // 30 second timeout
+      maxRedirects: 5,
     });
 
-    if (!response.ok) {
-      return next(new AppError(`Failed to fetch image: ${response.statusText}`, response.status));
-    }
-
-    // Get content type from response
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
-
-    // Convert response to buffer
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    // Get content type from response headers
+    const contentType = response.headers['content-type'] || 'image/jpeg';
 
     // Set response headers
     res.set({
       'Content-Type': contentType,
       'Cache-Control': 'public, max-age=86400', // Cache for 1 day
       'Access-Control-Allow-Origin': '*',
-      'Content-Length': buffer.length,
+      'Access-Control-Allow-Headers': '*',
+      'Content-Length': response.data.length,
     });
 
     // Send image buffer
-    res.send(buffer);
+    res.send(response.data);
   } catch (error) {
-    console.error('Proxy image error:', error);
-    return next(new AppError('Failed to proxy image', 500));
+    console.error('Proxy image error:', error.message);
+    
+    // Handle different error types
+    if (error.response) {
+      // Server responded with error status
+      return next(new AppError(`Failed to fetch image: ${error.response.status} ${error.response.statusText}`, error.response.status));
+    } else if (error.request) {
+      // Request made but no response
+      return next(new AppError('No response from image server', 504));
+    } else {
+      // Other errors
+      return next(new AppError(`Proxy failed: ${error.message}`, 500));
+    }
   }
 });
 
